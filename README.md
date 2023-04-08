@@ -1,6 +1,6 @@
 # Terraform ECS redeploy
 
-AWS Lambda Function URL to redeploy ECS services.
+Terraform module to create an AWS Lambda Function URL that redeploys ECS services.
 
 ## Examples
 
@@ -9,8 +9,50 @@ AWS Lambda Function URL to redeploy ECS services.
 ## Usage
 
 ```hcl
-# TODO
+module "redeploy" {
+  source = "github.com/dts-hosting/terraform-ecs-redeploy"
+
+  cluster   = var.cluster # ECS cluster name
+  name      = var.name # Name applied to AWS resources that are created
+  token_key = var.token_key # SSM param name for token (basic authz)
+}
 ```
+
+The `token_key` SSM parameter is NOT created by this module. It must be
+created separately and is never captured in Terraform state.
+
+### Invoking the function
+
+The simplest URL requires:
+
+- lambda url (available via terraform outputs)
+- query params:
+  - cluster (name)
+  - service (name)
+  - token (value)
+
+```bash
+curl -v -X POST \
+  'https://$id.lambda-url.$region.on.aws/?cluster=$cluster&service=$service&token=$token'
+```
+
+Assuming a redeploy function was deployed with a matching `cluster` name, for a cluster
+that has a service identified by `service`, and the `token` matches the token SSM param
+value the function accesses then the service will be redeployed.
+
+For more control a `tag` parameter can be included in the url. When this is present the
+redeploy will only occur if the POST body includes `push_data.tag` with a matching value:
+
+```bash
+curl -v -X POST \
+  -H "content-type: application/json" \
+  -d '{ "push_data": { "tag": "latest" } }' \
+  'https://$id.lambda-url.$region.on.aws/?cluster=$cluster&service=$service&token=$token&tag=latest'
+```
+
+This is useful when webhook services are triggered in automated environments and you need
+to ensure that a service is only restarted when a matching tag is pushed (not when any tag
+is pushed).
 
 ## Local debug
 
