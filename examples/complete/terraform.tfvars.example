@@ -1,4 +1,3 @@
 cluster   = "test-cluster"
-name      = "test-redeploy-url"
-slack_key = "test-slack-key"
+profile   = "default"
 token_key = "test-token-key"
