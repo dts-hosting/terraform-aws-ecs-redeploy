@@ -38,10 +38,10 @@ def handler(event, context):
         WithDecryption=True
     )
 
-    slack_key = os.environ.get('SLACK_KEY', None)
-    if slack_key:
+    notification_key = os.environ.get('NOTIFICATION_KEY', None)
+    if notification_key:
         webhook = ssm_client.get_parameter(
-            Name=slack_key,
+            Name=notification_key,
             WithDecryption=True
         )['Parameter']['Value']
     tz = timezone(os.environ.get('TIMEZONE', 'UTC'))
@@ -87,8 +87,8 @@ def handler(event, context):
             service=service,
             forceNewDeployment=True
         )
-        if slack_key and webhook:
-            send_slack_message(webhook, {
+        if notification_key and webhook:
+            send_notification_message(webhook, {
                 "text": "Redeploying: {0} -- {1} -- {2}".format(cluster, service, datetime.now(tz))
             })
 
@@ -120,7 +120,7 @@ def response_json(message):
     }
 
 
-def send_slack_message(webhook, payload):
+def send_notification_message(webhook, payload):
     return requests.post(webhook, json.dumps(payload))
 
 

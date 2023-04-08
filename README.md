@@ -12,14 +12,19 @@ Terraform module to create an AWS Lambda Function URL that redeploys ECS service
 module "redeploy" {
   source = "github.com/dts-hosting/terraform-ecs-redeploy"
 
-  cluster   = var.cluster # ECS cluster name
-  name      = var.name # Name applied to AWS resources that are created
-  token_key = var.token_key # SSM param name for token (basic authz)
+  cluster          = var.cluster # ECS cluster name
+  name             = var.name # Name applied to AWS resources that are created
+  notification_key = var.n_key # (optional) SSM param name for notification webhook
+  token_key        = var.token_key # SSM param name for token (basic authz)
+  timezone         = var.timezone # Timezone for notification date (default UTC)
 }
 ```
 
 The `token_key` SSM parameter is NOT created by this module. It must be
 created separately and is never captured in Terraform state.
+
+The `notification_key` value should be a URL that can receive a basic redeploy
+confirmation message (POST data), such as a Slack webhook url.
 
 ### Invoking the function
 

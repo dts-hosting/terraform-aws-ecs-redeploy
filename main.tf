@@ -14,10 +14,11 @@ resource "aws_lambda_function" "this" {
 
   environment {
     variables = {
-      CLUSTER   = var.cluster
-      DEBUG     = false
-      SLACK_KEY = var.slack_key
-      TOKEN_KEY = var.token_key
+      CLUSTER          = var.cluster
+      DEBUG            = false
+      NOTIFICATION_KEY = var.notification_key
+      TOKEN_KEY        = var.token_key
+      TIMEZONE         = var.timezone
     }
   }
 

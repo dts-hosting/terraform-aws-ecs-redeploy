@@ -6,9 +6,14 @@ variable "name" {
   description = "Name for project / function resources"
 }
 
-variable "slack_key" {
+variable "notification_key" {
   default     = ""
-  description = "SSM param name for Slack webhook url"
+  description = "SSM param name for notification webhook url"
+}
+
+variable "timezone" {
+  default     = "UTC"
+  description = "Timezone for notification date"
 }
 
 variable "token_key" {
