@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import requests
+
 from datetime import datetime
 from distutils.util import strtobool
 from pytz import timezone
@@ -86,7 +87,7 @@ def handler(event, context):
             service=service,
             forceNewDeployment=True
         )
-        if webhook:
+        if slack_key and webhook:
             send_slack_message(webhook, {
                 "text": "Redeploying: {0} -- {1} -- {2}".format(cluster, service, datetime.now(tz))
             })
