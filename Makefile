@@ -13,3 +13,8 @@ build: clean
 
 clean:
 	rm -rf build/*
+
+.PHONY: install
+install:
+	@rbenv install -s
+	@gem install overcommit && overcommit --install && overcommit --sign pre-commit
