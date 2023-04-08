@@ -46,7 +46,7 @@
         "environmentVariables": {
           "CLUSTER": "test-cluster",
           "DEBUG": "true",
-          "TOKEN_NAME": "test-redeploy-token"
+          "TOKEN_KEY": "test-redeploy-token"
         }
       },
       "aws": {

@@ -31,9 +31,9 @@ def handler(event, context):
         evt_tag = None
 
     cluster_env = os.environ.get('CLUSTER')
-    token_name = os.environ.get('TOKEN_NAME')
+    token_key = os.environ.get('TOKEN_KEY')
     token_ssm = ssm_client.get_parameter(
-        Name=token_name,
+        Name=token_key,
         WithDecryption=True
     )
 
