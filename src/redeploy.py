@@ -17,7 +17,7 @@ ssm_client = boto3.client('ssm')
 def handler(event, context):
     logger.info(event)
     query_string_params = event.get(
-        'queryStringParameters', default_query_params)
+        'queryStringParameters', default_query_params())
 
     debug = bool(strtobool(os.environ.get('DEBUG', False)))
     cluster = query_string_params.get('cluster')
