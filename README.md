@@ -4,7 +4,13 @@ AWS Lambda Function URL to redeploy ECS services.
 
 ## Examples
 
-TODO
+- [Create redeploy function url](examples/complete)
+
+## Usage
+
+```hcl
+# TODO
+```
 
 ## Local debug
 
