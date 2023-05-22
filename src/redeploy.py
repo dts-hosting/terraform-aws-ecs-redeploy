@@ -16,7 +16,6 @@ ssm_client = boto3.client('ssm')
 
 
 def handler(event, context):
-    logger.info(event)
     query_string_params = event.get(
         'queryStringParameters', default_query_params())
 
@@ -30,6 +29,9 @@ def handler(event, context):
     notification_key = os.environ.get('NOTIFICATION_KEY', None)
     token_ssm = get_parameter(os.environ.get('TOKEN_KEY'))
     tz = timezone(os.environ.get('TIMEZONE', 'UTC'))
+
+    if debug:
+        logger.info(event)
 
     if qry_tag:
         evt_tag = parse_event_for_tag(event)
@@ -52,34 +54,21 @@ def handler(event, context):
         else:
             raise InvalidTokenError('Token does not match')
 
-    if (qry_tag and evt_tag) and (qry_tag != evt_tag):
+    if qry_tag and (qry_tag != evt_tag):
         raise InvalidTagError(
             "Tags do not match: {0} {1}".format(qry_tag, evt_tag))
 
-    response = ecs_client.list_clusters()
-    clusters = parse_arns_to_names(response.get('clusterArns', []))
-
-    if not cluster in clusters:
+    if not cluster in get_clusters():
         raise InvalidClusterError("Cluster was not found: {0}".format(cluster))
 
-    response = ecs_client.list_services(
-        cluster=cluster,
-        maxResults=100
-    )
-    services = parse_arns_to_names(response.get('serviceArns', []))
-
-    if not service in services:
+    if not service in get_services(cluster):
         raise InvalidServiceError("Service was not found: {0}".format(service))
 
     if debug:
         return response_json('Debug only, thx!')
 
     try:
-        ecs_client.update_service(
-            cluster=cluster,
-            service=service,
-            forceNewDeployment=True
-        )
+        update_service(cluster, service)
         if notification_key and webhook:
             send_notification_message(webhook, {
                 "text": "Redeploying: {0} -- {1} -- {2}".format(cluster, service, datetime.now(tz))
@@ -101,9 +90,22 @@ def default_query_params():
     }
 
 
+def get_clusters():
+    response = ecs_client.list_clusters()
+    return parse_arns_to_names(response.get('clusterArns', []))
+
+
 def get_parameter(key):
     ssm_client.get_parameter(Name=key, WithDecryption=True)[
         'Parameter']['Value']
+
+
+def get_services(cluster):
+    response = ecs_client.list_services(
+        cluster=cluster,
+        maxResults=100
+    )
+    return parse_arns_to_names(response.get('serviceArns', []))
 
 
 def parse_arns_to_names(arns):
@@ -126,6 +128,14 @@ def response_json(message):
 
 def send_notification_message(webhook, payload):
     return requests.post(webhook, json.dumps(payload))
+
+
+def update_service(cluster, service):
+    ecs_client.update_service(
+        cluster=cluster,
+        service=service,
+        forceNewDeployment=True
+    )
 
 
 class InvalidClusterError(Exception):
