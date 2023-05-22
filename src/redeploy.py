@@ -26,25 +26,18 @@ def handler(event, context):
     token = query_string_params.get('token')
     qry_tag = query_string_params.get('tag', None)
 
+    cluster_env = os.environ.get('CLUSTER')
+    notification_key = os.environ.get('NOTIFICATION_KEY', None)
+    token_ssm = get_parameter(os.environ.get('TOKEN_KEY'))
+    tz = timezone(os.environ.get('TIMEZONE', 'UTC'))
+
     if qry_tag:
-        evt_tag = json.loads(event.get('body')).get('push_data').get('tag')
+        evt_tag = parse_event_for_tag(event)
     else:
         evt_tag = None
 
-    cluster_env = os.environ.get('CLUSTER')
-    token_key = os.environ.get('TOKEN_KEY')
-    token_ssm = ssm_client.get_parameter(
-        Name=token_key,
-        WithDecryption=True
-    )
-
-    notification_key = os.environ.get('NOTIFICATION_KEY', None)
     if notification_key:
-        webhook = ssm_client.get_parameter(
-            Name=notification_key,
-            WithDecryption=True
-        )['Parameter']['Value']
-    tz = timezone(os.environ.get('TIMEZONE', 'UTC'))
+        webhook = get_parameter(notification_key)
 
     logger.info("Validating: {0} {1} {2} {3}".format(
         cluster, service, qry_tag, evt_tag))
@@ -53,7 +46,7 @@ def handler(event, context):
         raise InvalidClusterError(
             "Cluster redeployments not supported: {0}".format(cluster))
 
-    if token != token_ssm['Parameter']['Value']:
+    if token != token_ssm:
         if debug:
             logger.info("Skipping token check as running in debug mode!")
         else:
@@ -108,8 +101,19 @@ def default_query_params():
     }
 
 
+def get_parameter(key):
+    ssm_client.get_parameter(Name=key, WithDecryption=True)[
+        'Parameter']['Value']
+
+
 def parse_arns_to_names(arns):
     return map(lambda x: x.rsplit('/')[-1], arns)
+
+
+def parse_event_for_tag(event):
+    tag = json.loads(event.get('body', '{}')).get(
+        'push_data', {}).get('tag', None)
+    return tag if tag else None
 
 
 def response_json(message):
