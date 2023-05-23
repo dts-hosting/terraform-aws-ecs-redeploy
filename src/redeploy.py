@@ -96,8 +96,8 @@ def get_clusters():
 
 
 def get_parameter(key):
-    ssm_client.get_parameter(Name=key, WithDecryption=True)[
-        'Parameter']['Value']
+    response = ssm_client.get_parameter(Name=key, WithDecryption=True)
+    return response['Parameter']['Value']
 
 
 def get_services(cluster):
@@ -131,7 +131,7 @@ def send_notification_message(webhook, payload):
 
 
 def update_service(cluster, service):
-    ecs_client.update_service(
+    return ecs_client.update_service(
         cluster=cluster,
         service=service,
         forceNewDeployment=True
