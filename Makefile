@@ -1,4 +1,4 @@
-PROJECT = terraform-ecs-redeploy
+PROJECT = terraform-aws-ecs-redeploy
 FUNCTION = $(PROJECT)
 
 all: build

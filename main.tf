@@ -1,7 +1,7 @@
 locals {
   handler = "redeploy.handler"
-  pkg     = "${path.module}/build/terraform-ecs-redeploy.zip"
-  project = "terraform-ecs-redeploy"
+  pkg     = "${path.module}/build/terraform-aws-ecs-redeploy.zip"
+  project = "terraform-aws-ecs-redeploy"
 }
 
 resource "aws_lambda_function" "this" {

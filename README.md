@@ -1,4 +1,4 @@
-# Terraform ECS redeploy
+# Terraform AWS ECS redeploy
 
 Terraform module to create an AWS Lambda Function URL that redeploys ECS services.
 
@@ -10,7 +10,7 @@ Terraform module to create an AWS Lambda Function URL that redeploys ECS service
 
 ```hcl
 module "redeploy" {
-  source = "github.com/dts-hosting/terraform-ecs-redeploy"
+  source = "github.com/dts-hosting/terraform-aws-ecs-redeploy"
 
   cluster          = var.cluster # ECS cluster name
   name             = var.name # Name applied to AWS resources that are created
