@@ -15,11 +15,9 @@ ecs_client = boto3.client('ecs')
 ssm_client = boto3.client('ssm')
 
 
-def handler(event, context):
-    query_string_params = event.get(
-        'queryStringParameters', default_query_params())
-
-    debug = bool(strtobool(os.environ.get('DEBUG', False)))
+def handler(event, _context):
+    debug = bool(strtobool(os.environ.get('DEBUG', 'false')))
+    query_string_params = event.get('queryStringParameters')
     cluster = query_string_params.get('cluster')
     service = query_string_params.get('service')
     token = query_string_params.get('token')
@@ -41,28 +39,25 @@ def handler(event, context):
     if notification_key:
         webhook = get_parameter(notification_key)
 
-    logger.info("Validating: {0} {1} {2} {3}".format(
-        cluster, service, qry_tag, evt_tag))
+    logger.info(f"Validating: {cluster} {service} {qry_tag} {evt_tag}")
 
     if cluster != cluster_env:
-        raise InvalidClusterError(
-            "Cluster redeployments not supported: {0}".format(cluster))
+        return response_json(f"Service redeployment not supported for cluster: {cluster}", 500)
 
     if token != token_ssm:
         if debug:
             logger.info("Skipping token check as running in debug mode!")
         else:
-            raise InvalidTokenError('Token does not match')
+            return response_json('Token does not match', 500)
 
     if qry_tag and (qry_tag != evt_tag):
-        raise InvalidTagError(
-            "Tags do not match: {0} {1}".format(qry_tag, evt_tag))
+        return response_json(f"Tags do not match: {qry_tag} {evt_tag}", 500)
 
     if not cluster in get_clusters():
-        raise InvalidClusterError("Cluster was not found: {0}".format(cluster))
+        return response_json(f"Cluster was not found: {cluster}", 500)
 
     if not service in get_services(cluster):
-        raise InvalidServiceError("Service was not found: {0}".format(service))
+        return response_json(f"Service was not found: {service}", 500)
 
     if debug:
         return response_json('Debug only, thx!')
@@ -70,24 +65,14 @@ def handler(event, context):
     try:
         update_service(cluster, service)
         if notification_key and webhook:
+            notification_time = datetime.now(tz)
             send_notification_message(webhook, {
-                "text": "Redeploying: {0} -- {1} -- {2}".format(cluster, service, datetime.now(tz))
+                "text": f"Redeploying: {cluster} -- {service} -- {notification_time}"
             })
 
         return response_json('Ok!')
-    except botocore.exceptions.ClientError as error:
-        logger.error(error.response)
-        raise RedeploymentError(
-            "Failed to redeploy ECS service: {0} -- {1}".format(cluster, service))
-
-
-def default_query_params():
-    return {
-        'cluster': '',
-        'service': '',
-        'token': '',
-        'tag': None,
-    }
+    except botocore.exceptions.ClientError as _error:
+        return response_json(f"Failed to redeploy ECS service: {cluster} {service}", 500)
 
 
 def get_clusters():
@@ -118,9 +103,9 @@ def parse_event_for_tag(event):
     return tag if tag else None
 
 
-def response_json(message):
+def response_json(message, status=200):
     return {
-        'statusCode': 200,
+        'statusCode': status,
         'headers': {'Content-Type': 'application/json'},
         'body': json.dumps({'message': message})
     }
@@ -136,23 +121,3 @@ def update_service(cluster, service):
         service=service,
         forceNewDeployment=True
     )
-
-
-class InvalidClusterError(Exception):
-    pass
-
-
-class InvalidServiceError(Exception):
-    pass
-
-
-class InvalidTagError(Exception):
-    pass
-
-
-class InvalidTokenError(Exception):
-    pass
-
-
-class RedeploymentError(Exception):
-    pass

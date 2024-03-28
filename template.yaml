@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  terraform-aws-ecs-redeploy
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+    LoggingConfig:
+      LogFormat: JSON
+
+Resources:
+  RedeployFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/redeploy.handler
+      Runtime: python3.9
+      Architectures:
+      - x86_64
+      Environment:
+        Variables:
+          CLUSTER: cspace-dcsp-production
+          DEBUG: "true"
+          TOKEN_KEY: cspace-dcsp-production-redeployer-token
