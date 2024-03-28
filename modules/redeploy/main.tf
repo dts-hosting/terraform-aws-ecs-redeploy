@@ -1,6 +1,6 @@
 locals {
   handler = "redeploy.handler"
-  pkg     = "${path.module}/build/terraform-aws-ecs-redeploy.zip"
+  pkg     = "${path.module}/../../build/terraform-aws-ecs-redeploy.zip"
   project = "terraform-aws-ecs-redeploy"
 }
 
