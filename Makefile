@@ -3,16 +3,20 @@ FUNCTION = $(PROJECT)
 
 all: build
 
-.PHONY: build clean
+.PHONY: build clean debug
 
 build: clean
-	cd src; pip install -r requirements.txt -t ./
-	cd src; zip -X -r $(FUNCTION).zip . -x "*__pycache__*"
-	cp src/$(FUNCTION).zip build/
-	rm src/$(FUNCTION).zip
+	@pip install -r requirements.txt -t ./src/
+	@cd src; zip -X -r $(FUNCTION).zip . -x "*__pycache__*"
+	@cp src/$(FUNCTION).zip build/
+	@rm src/$(FUNCTION).zip
 
 clean:
-	rm -rf build/*
+	@rm -rf build/*
+
+debug:
+	@sam build
+	@sam local invoke RedeployFunction --event events/event.json
 
 .PHONY: install
 install:

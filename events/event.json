@@ -1,0 +1,7 @@
+{
+  "queryStringParameters": {
+    "cluster": "cspace-dcsp-production",
+    "service": "qa",
+    "token": "faketoken"
+  }
+}

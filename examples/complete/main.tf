@@ -19,7 +19,7 @@ locals {
 }
 
 module "redeploy" {
-  source = "../.."
+  source = "../../modules/redeploy"
 
   cluster   = var.cluster
   name      = local.name
